@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import { db } from "./index";
 import {
@@ -8,6 +8,10 @@ import {
   expenseLines,
   allocationBuckets,
 } from "./schema";
+
+// Scripts executados pelo Node não carregam .env.local automaticamente como o Next.js.
+dotenv.config({ path: ".env.local" });
+dotenv.config();
 
 async function main() {
   console.log("Seeding database...");
