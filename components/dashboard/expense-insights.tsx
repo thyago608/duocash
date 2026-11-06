@@ -80,10 +80,6 @@ export function ExpenseInsights({ lines }: { lines: ExpenseLine[] }) {
                   );
                 })}
               </svg>
-              <div className="absolute inset-0 grid place-items-center text-center">
-                <span className="text-xs text-muted-foreground">maior gasto</span>
-                <span className="max-w-22 truncate text-sm font-bold">{highestExpense?.label ?? "—"}</span>
-              </div>
             </div>
             <ul className="min-w-0 space-y-2 text-xs">
               {pieSlices.map((slice, index) => (
