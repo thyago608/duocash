@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ArrowDownLeft, ReceiptText, ShoppingBag, SlidersHorizontal } from "lucide-react";
+import { ArrowDownLeft, ArrowRight, ReceiptText, ShoppingBag, SlidersHorizontal } from "lucide-react";
 import { MonthOverview } from "@/components/dashboard/month-overview";
 import { IncomeList } from "@/components/dashboard/income-list";
 import { ExpenseList } from "@/components/dashboard/expense-list";
@@ -155,19 +155,40 @@ export function Dashboard({
           </div>
         )}
 
-        {variant === "columns" && (
-          <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-3">
-            <div id="entradas" className="scroll-mt-24"><FinancialPanel kind="income">{incomeBlock}</FinancialPanel></div>
+        {variant === "summary" && (
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+            <div id="entradas" className="scroll-mt-24 lg:col-span-2">
+              <FinancialPanel kind="income" className="border-positive/35 shadow-md shadow-positive/5">
+                {incomeBlock}
+              </FinancialPanel>
+            </div>
             <div id="fixas" className="scroll-mt-24"><FinancialPanel kind="fixed">{expenseBlock}</FinancialPanel></div>
             <div id="dia-a-dia" className="scroll-mt-24"><FinancialPanel kind="daily">{dailyExpenseBlock}</FinancialPanel></div>
           </div>
         )}
 
-        {variant === "focus" && (
-          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
-            <div id="entradas" className="scroll-mt-24 lg:col-span-3"><FinancialPanel kind="income">{incomeBlock}</FinancialPanel></div>
-            <div id="fixas" className="scroll-mt-24 lg:col-span-3"><FinancialPanel kind="fixed">{expenseBlock}</FinancialPanel></div>
-            <div id="dia-a-dia" className="scroll-mt-24 lg:col-span-6"><FinancialPanel kind="daily" className="shadow-lg shadow-warning/10">{dailyExpenseBlock}</FinancialPanel></div>
+        {variant === "flow" && (
+          <div className="flex flex-col gap-4">
+            <div id="entradas" className="grid scroll-mt-24 gap-3 md:grid-cols-[auto_1fr] md:items-start">
+              <div className="flex items-center gap-2 md:flex-col md:pt-6">
+                <span className="grid size-9 place-items-center rounded-full bg-positive text-sm font-bold text-positive-foreground">1</span>
+                <ArrowRight className="size-4 text-muted-foreground md:rotate-90" />
+              </div>
+              <FinancialPanel kind="income" className="border-l-4 border-l-positive">{incomeBlock}</FinancialPanel>
+            </div>
+            <div id="fixas" className="grid scroll-mt-24 gap-3 md:grid-cols-[auto_1fr] md:items-start">
+              <div className="flex items-center gap-2 md:flex-col md:pt-6">
+                <span className="grid size-9 place-items-center rounded-full bg-negative text-sm font-bold text-negative-foreground">2</span>
+                <ArrowRight className="size-4 text-muted-foreground md:rotate-90" />
+              </div>
+              <FinancialPanel kind="fixed" className="border-l-4 border-l-negative">{expenseBlock}</FinancialPanel>
+            </div>
+            <div id="dia-a-dia" className="grid scroll-mt-24 gap-3 md:grid-cols-[auto_1fr] md:items-start">
+              <div className="flex items-center gap-2 md:flex-col md:pt-6">
+                <span className="grid size-9 place-items-center rounded-full bg-warning text-sm font-bold text-warning-foreground">3</span>
+              </div>
+              <FinancialPanel kind="daily" className="border-l-4 border-l-warning">{dailyExpenseBlock}</FinancialPanel>
+            </div>
           </div>
         )}
 
