@@ -31,10 +31,10 @@ export function MonthOverview({
             key={month.id}
             type="button"
             onClick={() => onSelect(month.slug)}
-            className={`flex min-w-[240px] snap-start flex-col gap-3 rounded-3xl border px-5 py-4 text-left transition-all ${
+            className={`flex min-w-[240px] snap-start flex-col gap-3 rounded-3xl border px-5 py-4 text-left transition-all duration-300 ease-out active:scale-[.99] ${
               active
                 ? "border-primary/60 bg-primary/8 ring-2 ring-primary/25"
-                : "border-border/60 bg-card hover:border-primary/30"
+                : "border-border/60 bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
             }`}
           >
             <span className="text-sm font-medium text-muted-foreground">{month.label}</span>

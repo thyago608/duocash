@@ -76,6 +76,7 @@ export function ExpenseInsights({ lines }: { lines: ExpenseLine[] }) {
                       strokeDasharray={`${slice.dash} ${CIRCUMFERENCE - slice.dash}`}
                       strokeDashoffset={slice.offset}
                       strokeLinecap="butt"
+                      className="transition-[stroke-dasharray,stroke-dashoffset] duration-700 ease-out"
                     />
                   );
                 })}
@@ -100,7 +101,7 @@ export function ExpenseInsights({ lines }: { lines: ExpenseLine[] }) {
                 <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{index + 1}</span>
                 <div className="min-w-0">
                   <div className="flex justify-between gap-3 text-sm"><span className="truncate font-medium">{expense.label}</span><span className="shrink-0 font-semibold tabular-nums">{formatCents(expense.amountCents)}</span></div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${(expense.amountCents / highestAmount) * 100}%` }} /></div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out" style={{ width: `${(expense.amountCents / highestAmount) * 100}%` }} /></div>
                 </div>
               </li>
             ))}
