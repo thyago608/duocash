@@ -29,12 +29,12 @@ async function main() {
       .update(users)
       .set({ passwordHash: thyagoHash })
       .where(eq(users.username, "thyago"))
-      .returning({ username: users.username }),
+      .returning(),
     db
       .update(users)
       .set({ passwordHash: thaylaHash })
       .where(eq(users.username, "thayla"))
-      .returning({ username: users.username }),
+      .returning(),
   ]);
 
   if (thyago.length !== 1 || thayla.length !== 1) {

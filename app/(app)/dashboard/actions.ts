@@ -53,6 +53,7 @@ export async function toggleExpensePaid(lineId: string, paid: boolean) {
 
 const expenseLineSchema = z.object({
   monthId: z.string().uuid(),
+  section: z.enum(["fixed", "punctual"]).default("punctual"),
   label: z.string().trim().min(1).max(200),
   amountCents: z.number().int().positive(),
   chipLabel: z.string().trim().max(100).optional(),
@@ -73,7 +74,7 @@ export async function createExpenseLine(input: z.infer<typeof expenseLineSchema>
     .insert(expenseLines)
     .values({
       monthId: parsed.monthId,
-      section: "punctual",
+      section: parsed.section,
       label: parsed.label,
       chipLabel: parsed.chipLabel || null,
       amountCents: parsed.amountCents,

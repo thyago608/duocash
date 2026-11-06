@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { AddLineDialog } from "@/components/dashboard/add-line-dialog";
@@ -21,17 +20,17 @@ type ExpenseLine = typeof expenseLines.$inferSelect;
 export function ExpenseList({
   monthId,
   lines,
-  variant = "compact",
+  section,
+  variant = "groups",
 }: {
   monthId: string;
   lines: ExpenseLine[];
+  section: "fixed" | "punctual";
   variant?: LayoutVariant;
 }) {
   const [rows, setRows] = useState(lines);
   const [, startTransition] = useTransition();
-  const compact = variant === "compact";
-
-  const [fixedOpen, setFixedOpen] = useState(true);
+  const compact = variant === "groups";
 
   const handleToggle = (id: string, checked: boolean) => {
     const previous = rows;
@@ -55,7 +54,7 @@ export function ExpenseList({
     const optimisticLine: ExpenseLine = {
       id: tempId,
       monthId,
-      section: "punctual",
+      section,
       label,
       chipLabel: null,
       amountCents,
@@ -69,7 +68,7 @@ export function ExpenseList({
 
     startTransition(async () => {
       try {
-        const inserted = await createExpenseLine({ monthId, label, amountCents });
+        const inserted = await createExpenseLine({ monthId, label, amountCents, section });
         setRows((current) => current.map((r) => (r.id === tempId ? inserted : r)));
         toast.success("Despesa registrada");
       } catch {
@@ -93,11 +92,13 @@ export function ExpenseList({
     });
   };
 
-  const fixedLines = rows.filter((r) => r.section === "fixed");
-  const punctualLines = rows.filter((r) => r.section === "punctual");
-  const fixedTotal = fixedLines.reduce((acc, r) => acc + r.amountCents, 0);
-  const paidTotal = rows.filter((r) => r.isPaid).reduce((acc, r) => acc + r.amountCents, 0);
-  const grandTotal = rows.reduce((acc, r) => acc + r.amountCents, 0);
+  const sectionRows = rows.filter((row) => row.section === section);
+  const paidTotal = sectionRows
+    .filter((row) => row.isPaid)
+    .reduce((acc, row) => acc + row.amountCents, 0);
+  const grandTotal = sectionRows.reduce((acc, row) => acc + row.amountCents, 0);
+  const title = section === "fixed" ? "Despesas fixas" : "Gastos do dia a dia";
+  const addLabel = section === "fixed" ? "Cadastrar despesa fixa" : "Cadastrar gasto do dia a dia";
 
   const row = (line: ExpenseLine) =>
     compact ? (
@@ -193,10 +194,10 @@ export function ExpenseList({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-muted-foreground">Saídas</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
         <AddLineDialog
-          triggerLabel="Cadastrar nova saída"
-          title="Nova saída"
+          triggerLabel={addLabel}
+          title={section === "fixed" ? "Nova despesa fixa" : "Novo gasto do dia a dia"}
           labelPlaceholder="Para onde foi o dinheiro?"
           onSubmit={handleAdd}
         />
@@ -213,25 +214,7 @@ export function ExpenseList({
       </div>
 
       <div className={compact ? "flex flex-col divide-y divide-border/60" : "flex flex-col gap-2"}>
-        <button
-          type="button"
-          onClick={() => setFixedOpen(!fixedOpen)}
-          className="flex items-center justify-between px-1 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase"
-        >
-          <span className="flex items-center gap-1">
-            <ChevronRight className={`size-3.5 transition-transform ${fixedOpen ? "rotate-90" : ""}`} />
-            Fixas
-          </span>
-          <span className="text-xs font-normal tracking-normal text-foreground/70 normal-case">
-            {fixedLines.length} itens • {formatCents(fixedTotal)}
-          </span>
-        </button>
-        {fixedOpen && fixedLines.map((line) => row(line))}
-
-        <p className="mt-2 px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Pontuais
-        </p>
-        {punctualLines.map((line) => row(line))}
+        {sectionRows.map((line) => row(line))}
       </div>
     </div>
   );

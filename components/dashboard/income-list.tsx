@@ -20,7 +20,7 @@ type IncomeLine = typeof incomeLines.$inferSelect;
 export function IncomeList({
   monthId,
   lines,
-  variant = "compact",
+  variant = "groups",
 }: {
   monthId: string;
   lines: IncomeLine[];
@@ -28,7 +28,7 @@ export function IncomeList({
 }) {
   const [rows, setRows] = useState(lines);
   const [, startTransition] = useTransition();
-  const compact = variant === "compact";
+  const compact = variant === "groups";
 
   const handleToggle = (id: string, checked: boolean) => {
     const previous = rows;

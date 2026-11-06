@@ -1,14 +1,15 @@
 import { useSyncExternalStore } from "react";
 
-export type LayoutVariant = "compact" | "tabs";
+export type LayoutVariant = "groups" | "columns" | "focus";
 
 export const LAYOUT_VARIANTS: { value: LayoutVariant; label: string }[] = [
-  { value: "compact", label: "Compacta (extrato)" },
-  { value: "tabs", label: "Abas" },
+  { value: "groups", label: "Grupos" },
+  { value: "columns", label: "Colunas" },
+  { value: "focus", label: "Foco no dia a dia" },
 ];
 
 const STORAGE_KEY = "duocash-expense-layout";
-const DEFAULT_VARIANT: LayoutVariant = "compact";
+const DEFAULT_VARIANT: LayoutVariant = "groups";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();

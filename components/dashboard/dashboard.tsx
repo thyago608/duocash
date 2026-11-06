@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ArrowDownLeft, ReceiptText, ShoppingBag, SlidersHorizontal } from "lucide-react";
 import { MonthOverview } from "@/components/dashboard/month-overview";
 import { IncomeList } from "@/components/dashboard/income-list";
 import { ExpenseList } from "@/components/dashboard/expense-list";
 import { AllocationBuckets } from "@/components/dashboard/allocation-buckets";
 import { MonthResetButton } from "@/components/dashboard/month-reset-button";
 import { ReserveSection } from "@/components/dashboard/reserve-section";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +20,58 @@ import type { MonthData } from "@/lib/calculations";
 import type { reserveWithdrawals as reserveWithdrawalsTable } from "@/db/schema";
 
 type ReserveWithdrawal = typeof reserveWithdrawalsTable.$inferSelect;
+
+const panelStyles = {
+  income: {
+    icon: ArrowDownLeft,
+    label: "Entradas",
+    description: "Valores que entram no mês",
+    className: "border-positive/25 bg-positive/5",
+    iconClassName: "bg-positive/15 text-positive",
+  },
+  fixed: {
+    icon: ReceiptText,
+    label: "Despesas fixas",
+    description: "Contas previsíveis e recorrentes",
+    className: "border-negative/20 bg-negative/5",
+    iconClassName: "bg-negative/15 text-negative",
+  },
+  daily: {
+    icon: ShoppingBag,
+    label: "Dia a dia",
+    description: "Gastos variáveis e pontuais",
+    className: "border-warning/25 bg-warning/8",
+    iconClassName: "bg-warning/20 text-warning-foreground",
+  },
+} as const;
+
+function FinancialPanel({
+  kind,
+  children,
+  className = "",
+}: {
+  kind: keyof typeof panelStyles;
+  children: ReactNode;
+  className?: string;
+}) {
+  const style = panelStyles[kind];
+  const Icon = style.icon;
+
+  return (
+    <section className={`rounded-3xl border p-4 sm:p-5 ${style.className} ${className}`}>
+      <div className="mb-5 flex items-start gap-3">
+        <span className={`rounded-2xl p-2.5 ${style.iconClassName}`}>
+          <Icon className="size-5" />
+        </span>
+        <div>
+          <h3 className="font-semibold">{style.label}</h3>
+          <p className="text-xs text-muted-foreground">{style.description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function Dashboard({
   months,
@@ -48,9 +99,20 @@ export function Dashboard({
 
   const expenseBlock = (
     <ExpenseList
-      key={`${activeMonth.id}-expense`}
+      key={`${activeMonth.id}-fixed-expense`}
       monthId={activeMonth.id}
       lines={activeMonth.expenseLines}
+      section="fixed"
+      variant={variant}
+    />
+  );
+
+  const dailyExpenseBlock = (
+    <ExpenseList
+      key={`${activeMonth.id}-daily-expense`}
+      monthId={activeMonth.id}
+      lines={activeMonth.expenseLines}
+      section="punctual"
       variant={variant}
     />
   );
@@ -85,19 +147,27 @@ export function Dashboard({
           </DropdownMenu>
         </div>
 
-        {variant === "tabs" ? (
-          <Tabs defaultValue="income">
-            <TabsList>
-              <TabsTrigger value="income">Entradas</TabsTrigger>
-              <TabsTrigger value="expense">Saídas</TabsTrigger>
-            </TabsList>
-            <TabsContent id="entradas" value="income" className="scroll-mt-24">{incomeBlock}</TabsContent>
-            <TabsContent id="saidas" value="expense" className="scroll-mt-24">{expenseBlock}</TabsContent>
-          </Tabs>
-        ) : (
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-            <div id="entradas" className="scroll-mt-24">{incomeBlock}</div>
-            <div id="saidas" className="scroll-mt-24">{expenseBlock}</div>
+        {variant === "groups" && (
+          <div className="flex flex-col gap-4">
+            <div id="entradas" className="scroll-mt-24"><FinancialPanel kind="income">{incomeBlock}</FinancialPanel></div>
+            <div id="fixas" className="scroll-mt-24"><FinancialPanel kind="fixed">{expenseBlock}</FinancialPanel></div>
+            <div id="dia-a-dia" className="scroll-mt-24"><FinancialPanel kind="daily">{dailyExpenseBlock}</FinancialPanel></div>
+          </div>
+        )}
+
+        {variant === "columns" && (
+          <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-3">
+            <div id="entradas" className="scroll-mt-24"><FinancialPanel kind="income">{incomeBlock}</FinancialPanel></div>
+            <div id="fixas" className="scroll-mt-24"><FinancialPanel kind="fixed">{expenseBlock}</FinancialPanel></div>
+            <div id="dia-a-dia" className="scroll-mt-24"><FinancialPanel kind="daily">{dailyExpenseBlock}</FinancialPanel></div>
+          </div>
+        )}
+
+        {variant === "focus" && (
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+            <div id="entradas" className="scroll-mt-24 lg:col-span-3"><FinancialPanel kind="income">{incomeBlock}</FinancialPanel></div>
+            <div id="fixas" className="scroll-mt-24 lg:col-span-3"><FinancialPanel kind="fixed">{expenseBlock}</FinancialPanel></div>
+            <div id="dia-a-dia" className="scroll-mt-24 lg:col-span-6"><FinancialPanel kind="daily" className="shadow-lg shadow-warning/10">{dailyExpenseBlock}</FinancialPanel></div>
           </div>
         )}
 
