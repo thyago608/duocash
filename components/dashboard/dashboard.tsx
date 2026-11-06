@@ -8,6 +8,7 @@ import { ExpenseList } from "@/components/dashboard/expense-list";
 import { AllocationBuckets } from "@/components/dashboard/allocation-buckets";
 import { MonthResetButton } from "@/components/dashboard/month-reset-button";
 import { ReserveSection } from "@/components/dashboard/reserve-section";
+import { ExpenseInsights } from "@/components/dashboard/expense-insights";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -169,6 +170,7 @@ export function Dashboard({
 
         {variant === "flow" && (
           <div className="flex flex-col gap-4">
+            <ExpenseInsights lines={activeMonth.expenseLines} />
             <div id="entradas" className="grid scroll-mt-24 gap-3 md:grid-cols-[auto_1fr] md:items-start">
               <div className="flex items-center gap-2 md:flex-col md:pt-6">
                 <span className="grid size-9 place-items-center rounded-full bg-positive text-sm font-bold text-positive-foreground">1</span>
