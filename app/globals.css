@@ -159,48 +159,47 @@
 /* Paletas alternativas (seletor no header) — trocam fundo/card/primária/acentos,
    mantendo as cores semânticas dos blocos (verde/amarelo/vermelho/azul/roxo/laranja) iguais. */
 
-/* Azul — cinza-azulado neutro + azul como destaque */
+/* Tema claro — superfícies neutras e detalhes em verde-lima. */
 [data-palette="blue"] {
-  --background: oklch(0.98 0.004 250);
-  --foreground: oklch(0.22 0.02 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 250);
-  --primary: oklch(0.52 0.18 250);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0.008 250);
-  --secondary-foreground: oklch(0.3 0.03 250);
-  --muted: oklch(0.95 0.006 250);
-  --muted-foreground: oklch(0.5 0.02 250);
-  --accent: oklch(0.91 0.018 250);
-  --accent-foreground: oklch(0.3 0.04 250);
-  --destructive: oklch(0.6 0.22 25);
-  --border: oklch(0.88 0.012 250 / 70%);
-  --input: oklch(0.88 0.012 250 / 70%);
-  --ring: oklch(0.52 0.18 250 / 50%);
-  --radius: 0.5rem;
+  --background: #f5f7f2;
+  --foreground: #111810;
+  --card: #ffffff;
+  --card-foreground: #111810;
+  --popover: #ffffff;
+  --popover-foreground: #111810;
+  --primary: #526b00;
+  --primary-foreground: #ffffff;
+  --secondary: #e9ede3;
+  --secondary-foreground: #17200d;
+  --muted: #edf0e9;
+  --muted-foreground: #596253;
+  --accent: #e7f4c5;
+  --accent-foreground: #273800;
+  --border: #dce2d5;
+  --input: #d2dacc;
+  --ring: #799b00;
 }
 
 .dark[data-palette="blue"] {
-  --background: oklch(0.15 0.012 250);
-  --foreground: oklch(0.95 0.006 250);
-  --card: oklch(0.21 0.015 250);
-  --card-foreground: oklch(0.95 0.006 250);
-  --popover: oklch(0.21 0.015 250);
-  --popover-foreground: oklch(0.95 0.006 250);
-  --primary: oklch(0.68 0.16 250);
-  --primary-foreground: oklch(0.15 0.02 250);
-  --secondary: oklch(0.27 0.016 250);
-  --secondary-foreground: oklch(0.95 0.006 250);
-  --muted: oklch(0.25 0.014 250);
-  --muted-foreground: oklch(0.7 0.012 250);
-  --accent: oklch(0.3 0.022 250);
-  --accent-foreground: oklch(0.95 0.006 250);
+  --background: #050a0b;
+  --foreground: #f5f7f7;
+  --card: #0b1011;
+  --card-foreground: #f5f7f7;
+  --popover: #101617;
+  --popover-foreground: #f5f7f7;
+  --primary: #c6ff00;
+  --primary-foreground: #0a1000;
+  --secondary: #1d2526;
+  --secondary-foreground: #f5f7f7;
+  --muted: #1a2223;
+  --muted-foreground: #a9b2b2;
+  --accent: #293521;
+  --accent-foreground: #efffc1;
   --destructive: oklch(0.65 0.2 25);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.68 0.16 250 / 50%);
+  --ring: #c6ff00;
+  --warning-foreground: #ffd36b;
 }
 
 /* Esmeralda — fundo com leve matiz verde-petróleo + verde-esmeralda como destaque */

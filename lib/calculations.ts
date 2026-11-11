@@ -48,12 +48,29 @@ export function commitmentRatio(month: MonthData) {
 
 /** Soma dos orçamentos planejados em "Como alocar o restante" */
 export function bucketBudgetTotal(month: MonthData) {
-  return sum(month.allocationBuckets.map((bucket) => bucket.budgetCents));
+  return sum(month.allocationBuckets.filter((bucket) => !isMarginBucket(bucket)).map((bucket) => bucket.budgetCents));
 }
 
-/** Sobra final = saldo disponível − soma dos orçamentos já alocados nos blocos */
+export function isMarginBucket(bucket: AllocationBucket) {
+  return bucket.name.toLowerCase().includes("margem");
+}
+
+/** Margem planejada, sem contar duas vezes gastos cobertos pelos orçamentos. */
 export function finalRemaining(month: MonthData) {
-  return monthBalance(month) - bucketBudgetTotal(month);
+  const tracked = month.allocationBuckets.filter((bucket) => bucket.type === "tracked" && !isMarginBucket(bucket));
+  const ids = new Set(tracked.map((bucket) => bucket.id));
+  const outside = month.expenseLines.filter((line) => !line.allocationBucketId || !ids.has(line.allocationBucketId));
+  const excess = tracked.reduce((total, bucket) => {
+    const used = sum(month.expenseLines.filter((line) => line.allocationBucketId === bucket.id).map((line) => line.amountCents));
+    return total + Math.max(0, used - bucket.budgetCents);
+  }, 0);
+  return incomeTotal(month) - sum(outside.map((line) => line.amountCents)) - bucketBudgetTotal(month) - excess;
+}
+
+export function cashAvailable(month: MonthData) {
+  return sum(month.incomeLines.filter((line) => line.isReceived).map((line) => line.amountCents))
+    - sum(month.expenseLines.filter((line) => line.isPaid).map((line) => line.amountCents))
+    - sum(month.allocationBuckets.filter((bucket) => bucket.type === "deposit" && bucket.isDeposited).map((bucket) => bucket.budgetCents));
 }
 
 /** Restante (bloco rastreado) = budget_cents − soma(allocation_entries.amount_cents) */

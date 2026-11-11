@@ -1,0 +1,3 @@
+ALTER TABLE "expense_lines" ADD COLUMN "allocation_bucket_id" uuid;--> statement-breakpoint
+ALTER TABLE "expense_lines" ADD COLUMN "on_credit_card" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "expense_lines" ADD CONSTRAINT "expense_lines_allocation_bucket_id_allocation_buckets_id_fk" FOREIGN KEY ("allocation_bucket_id") REFERENCES "public"."allocation_buckets"("id") ON DELETE set null ON UPDATE no action;

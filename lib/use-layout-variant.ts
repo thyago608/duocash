@@ -1,11 +1,10 @@
 import { useSyncExternalStore } from "react";
 
-export type LayoutVariant = "groups" | "summary" | "flow";
+export type LayoutVariant = "groups" | "flow";
 
 export const LAYOUT_VARIANTS: { value: LayoutVariant; label: string }[] = [
-  { value: "groups", label: "Grupos" },
-  { value: "summary", label: "Resumo mensal" },
-  { value: "flow", label: "Fluxo financeiro" },
+  { value: "groups", label: "Despesas" },
+  { value: "flow", label: "Panorama financeiro" },
 ];
 
 const STORAGE_KEY = "duocash-expense-layout";

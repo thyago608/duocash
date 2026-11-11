@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -57,11 +57,21 @@ const expenseLineSchema = z.object({
   label: z.string().trim().min(1).max(200),
   amountCents: z.number().int().positive(),
   chipLabel: z.string().trim().max(100).optional(),
+  allocationBucketId: z.string().uuid().nullable().optional(),
+  onCreditCard: z.boolean().optional(),
 });
+
+async function validateExpenseAllocation(monthId: string, bucketId?: string | null) {
+  if (!bucketId) return;
+  const [bucket] = await db.select({ id: allocationBuckets.id }).from(allocationBuckets)
+    .where(and(eq(allocationBuckets.id, bucketId), eq(allocationBuckets.monthId, monthId), eq(allocationBuckets.type, "tracked")));
+  if (!bucket) throw new Error("Alocação inválida para este mês.");
+}
 
 export async function createExpenseLine(input: z.infer<typeof expenseLineSchema>) {
   const userId = await requireUserId();
   const parsed = expenseLineSchema.parse(input);
+  await validateExpenseAllocation(parsed.monthId, parsed.allocationBucketId);
 
   const [{ nextOrderIndex }] = await db
     .select({
@@ -75,6 +85,8 @@ export async function createExpenseLine(input: z.infer<typeof expenseLineSchema>
     .values({
       monthId: parsed.monthId,
       section: parsed.section,
+      allocationBucketId: parsed.allocationBucketId ?? null,
+      onCreditCard: parsed.onCreditCard ?? false,
       label: parsed.label,
       chipLabel: parsed.chipLabel || null,
       amountCents: parsed.amountCents,
@@ -87,6 +99,40 @@ export async function createExpenseLine(input: z.infer<typeof expenseLineSchema>
 
   revalidatePath("/dashboard");
   return inserted;
+}
+
+export async function importExpenseLines(input: { monthId: string; lines: { label: string; amountCents: number; allocationBucketId: string | null }[] }) {
+  const userId = await requireUserId();
+  const parsed = z.object({ monthId: z.string().uuid(), lines: z.array(z.object({ label: z.string().trim().min(1).max(200), amountCents: z.number().int().positive().max(2147483647), allocationBucketId: z.string().uuid().nullable() })).min(1).max(100) }).parse(input);
+  await Promise.all([...new Set(parsed.lines.map((line) => line.allocationBucketId).filter((id): id is string => !!id))].map((id) => validateExpenseAllocation(parsed.monthId, id)));
+  const [{ nextOrderIndex }] = await db.select({ nextOrderIndex: sql<number>`coalesce(max(${expenseLines.orderIndex}), -1) + 1` }).from(expenseLines).where(eq(expenseLines.monthId, parsed.monthId));
+  const now = new Date();
+  await db.insert(expenseLines).values(parsed.lines.map((line, index) => ({ ...line, monthId: parsed.monthId, section: "punctual" as const, onCreditCard: false, isPaid: true, paidBy: userId, paidAt: now, orderIndex: nextOrderIndex + index })));
+  revalidatePath("/dashboard");
+}
+
+export async function updateExpenseLine(lineId: string, input: z.infer<typeof expenseLineSchema>) {
+  await requireUserId();
+  const parsed = expenseLineSchema.parse(input);
+  await validateExpenseAllocation(parsed.monthId, parsed.allocationBucketId);
+  const [updated] = await db.update(expenseLines).set({
+    label: parsed.label, amountCents: parsed.amountCents,
+    allocationBucketId: parsed.allocationBucketId ?? null,
+    onCreditCard: parsed.onCreditCard ?? false,
+  }).where(and(eq(expenseLines.id, z.string().uuid().parse(lineId)), eq(expenseLines.monthId, parsed.monthId), eq(expenseLines.section, parsed.section))).returning();
+  if (!updated) throw new Error("Despesa não encontrada.");
+  revalidatePath("/dashboard");
+  return updated;
+}
+
+export async function updateBucketBudget(bucketId: string, amountCents: number) {
+  await requireUserId();
+  const id = z.string().uuid().parse(bucketId);
+  const amount = z.number().int().nonnegative().parse(amountCents);
+  const [bucket] = await db.select().from(allocationBuckets).where(eq(allocationBuckets.id, id));
+  if (!bucket || bucket.name.toLowerCase().includes("margem")) throw new Error("Orçamento não editável.");
+  await db.update(allocationBuckets).set({ budgetCents: amount }).where(eq(allocationBuckets.id, id));
+  revalidatePath("/dashboard");
 }
 
 export async function deleteExpenseLine(lineId: string) {

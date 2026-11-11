@@ -45,6 +45,8 @@ export const expenseLines = pgTable("expense_lines", {
   id: uuid("id").primaryKey().defaultRandom(),
   monthId: uuid("month_id").notNull().references(() => months.id, { onDelete: "cascade" }),
   section: text("section", { enum: ["fixed", "punctual"] }).notNull(),
+  allocationBucketId: uuid("allocation_bucket_id").references(() => allocationBuckets.id, { onDelete: "set null" }),
+  onCreditCard: boolean("on_credit_card").notNull().default(false),
   label: text("label").notNull(),
   chipLabel: text("chip_label"),
   amountCents: integer("amount_cents").notNull(),

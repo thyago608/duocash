@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { PaletteEffect } from "@/components/palette-effect";
-import { PALETTE_BLOCKING_SCRIPT } from "@/lib/palette-constants";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -20,13 +18,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
+      data-palette="blue"
       suppressHydrationWarning
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script dangerouslySetInnerHTML={{ __html: PALETTE_BLOCKING_SCRIPT }} />
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <PaletteEffect />
+        <ThemeProvider attribute="class" themes={["light", "light-lime", "dark"]} defaultTheme="system" enableSystem>
           {children}
           <Toaster richColors position="top-center" />
         </ThemeProvider>

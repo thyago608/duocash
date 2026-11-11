@@ -2,10 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Badge } from "@/components/ui/badge";
 import { ColoredProgress } from "@/components/ui/colored-progress";
@@ -14,57 +12,22 @@ import { ConfirmDeleteButton } from "@/components/dashboard/confirm-delete-butto
 import { formatCents } from "@/lib/money";
 import { bucketColorClasses } from "@/lib/colors";
 import { glossaryForBucket } from "@/lib/glossary";
-import { createAllocationEntry, deleteAllocationEntry } from "@/app/(app)/dashboard/actions";
+import { deleteAllocationEntry, updateBucketBudget } from "@/app/(app)/dashboard/actions";
 import type { BucketWithEntries } from "@/lib/calculations";
 
-export function TrackedBucketCard({ bucket }: { bucket: BucketWithEntries }) {
+export function TrackedBucketCard({ bucket, linkedExpenses = [] }: { bucket: BucketWithEntries; linkedExpenses?: { id: string; label: string; amountCents: number }[] }) {
   const [entries, setEntries] = useState(bucket.entries);
-  const [amountCents, setAmountCents] = useState(0);
-  const [description, setDescription] = useState("");
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [budgetInput, setBudgetInput] = useState(bucket.budgetCents);
+  const isMargin = bucket.name.toLowerCase().includes("margem");
   const [, startTransition] = useTransition();
 
-  const used = entries.reduce((acc, e) => acc + e.amountCents, 0);
+  const used = linkedExpenses.reduce((acc, e) => acc + e.amountCents, 0);
   const remaining = bucket.budgetCents - used;
   const percent = bucket.budgetCents > 0 ? Math.round((used / bucket.budgetCents) * 100) : 0;
   const colors = bucketColorClasses(bucket.color);
   const overBudget = remaining < 0;
   const glossary = glossaryForBucket(bucket);
-
-  const handleSubmit = () => {
-    if (amountCents <= 0) {
-      toast.error("Informe um valor válido.");
-      return;
-    }
-
-    const tempId = `temp-${crypto.randomUUID()}`;
-    const optimisticEntry = {
-      id: tempId,
-      bucketId: bucket.id,
-      amountCents,
-      description: description || null,
-      createdBy: "",
-      createdAt: new Date(),
-    };
-
-    setEntries((current) => [optimisticEntry, ...current]);
-    setAmountCents(0);
-    setDescription("");
-
-    startTransition(async () => {
-      try {
-        const inserted = await createAllocationEntry({
-          bucketId: bucket.id,
-          amountCents,
-          description: description || undefined,
-        });
-        setEntries((current) => current.map((e) => (e.id === tempId ? inserted : e)));
-        toast.success("Lançamento registrado");
-      } catch {
-        setEntries((current) => current.filter((e) => e.id !== tempId));
-        toast.error("Não foi possível registrar. Tente novamente.");
-      }
-    });
-  };
 
   const handleDelete = (entryId: string) => {
     const previous = entries;
@@ -96,12 +59,11 @@ export function TrackedBucketCard({ bucket }: { bucket: BucketWithEntries }) {
               {glossary && <GlossaryHint title={glossary.title} text={glossary.text} />}
             </span>
           </span>
-          <Badge variant="secondary" className="shrink-0 tabular-nums">
-            {formatCents(bucket.budgetCents)}
-          </Badge>
+          <button type="button" disabled={isMargin} onClick={() => { setBudgetInput(bucket.budgetCents); setEditingBudget(true); }} aria-label={isMargin ? "Margem calculada" : `Editar orçamento de ${bucket.name}`}><Badge variant="secondary" className="shrink-0 tabular-nums">{formatCents(bucket.budgetCents)}</Badge></button>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {editingBudget && <div className="flex gap-2"><CurrencyInput aria-label={`Orçamento de ${bucket.name}`} valueCents={budgetInput} onValueChange={setBudgetInput} /><Button type="button" onClick={() => startTransition(async () => { try { await updateBucketBudget(bucket.id, budgetInput); setEditingBudget(false); toast.success("Orçamento atualizado"); } catch { toast.error("Não foi possível atualizar o orçamento."); } })}>Salvar</Button><Button type="button" variant="outline" onClick={() => setEditingBudget(false)}>Cancelar</Button></div>}
         <div>
           <ColoredProgress
             value={Math.min(percent, 100)}
@@ -110,7 +72,7 @@ export function TrackedBucketCard({ bucket }: { bucket: BucketWithEntries }) {
           />
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
-              Usado <span className="font-medium text-foreground">{formatCents(used)}</span>
+              Comprometido <span className="font-medium text-foreground">{formatCents(used)}</span>
             </span>
             <span className={overBudget ? "font-medium text-negative" : "text-muted-foreground"}>
               {overBudget ? "estourou em " : "resta "}
@@ -119,31 +81,9 @@ export function TrackedBucketCard({ bucket }: { bucket: BucketWithEntries }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <CurrencyInput
-            valueCents={amountCents}
-            onValueChange={setAmountCents}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
-            className="sm:w-28"
-          />
-          <Input
-            placeholder="Descrição (opcional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
-            className="flex-1"
-          />
-          <Button type="button" size="icon" onClick={handleSubmit} aria-label="Registrar lançamento">
-            <Plus className="size-4" />
-          </Button>
-        </div>
-
+        {linkedExpenses.length > 0 && <ul className="flex flex-col gap-2 text-sm">{linkedExpenses.map((expense) => <li key={expense.id} className="flex justify-between gap-2"><span className="min-w-0 break-words text-muted-foreground">{expense.label}</span><span className="shrink-0 tabular-nums">{formatCents(expense.amountCents)}</span></li>)}</ul>}
         {entries.length > 0 && (
-          <ul className="flex flex-col divide-y divide-border/60 text-sm">
+          <div><p className="mb-2 text-xs text-muted-foreground">Lançamentos antigos para revisão: não entram nos cálculos. Cadastre como despesa e exclua daqui após conferir.</p><ul className="flex flex-col divide-y divide-border/60 text-sm">
             {entries.map((entry) => (
               <li
                 key={entry.id}
@@ -162,7 +102,7 @@ export function TrackedBucketCard({ bucket }: { bucket: BucketWithEntries }) {
                 </span>
               </li>
             ))}
-          </ul>
+          </ul></div>
         )}
       </CardContent>
     </Card>
